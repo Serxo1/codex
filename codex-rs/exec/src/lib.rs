@@ -772,7 +772,7 @@ async fn run_exec_session(args: ExecRunArgs) -> anyhow::Result<()> {
                         input: items.into_iter().map(Into::into).collect(),
                         responsesapi_client_metadata: None,
                         environments: None,
-                        cwd: Some(default_cwd),
+                        cwd: Some(default_cwd.to_string_lossy().into_owned()),
                         approval_policy: Some(default_approval_policy.into()),
                         approvals_reviewer: None,
                         sandbox_policy: None,
