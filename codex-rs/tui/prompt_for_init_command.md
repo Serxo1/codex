@@ -1,6 +1,7 @@
-Generate a file named AGENTS.md that serves as a contributor guide for this repository.
+Create or update a file named AGENTS.md that serves as a contributor guide for this repository.
+If AGENTS.md already exists, improve it in place instead of refusing to proceed. Preserve accurate, repository-specific guidance that is already there, refresh stale or incomplete sections, and add missing guidance from the outline below. If the file does not exist, create it.
 Your goal is to produce a clear, concise, and well-structured document with descriptive headings and actionable explanations for each section.
-Follow the outline below, but adapt as needed — add sections if relevant, and omit those that do not apply to this project.
+Follow the outline below, but adapt as needed: add sections if relevant, and omit those that do not apply to this project.
 
 Document Requirements
 
@@ -34,7 +35,7 @@ Testing Guidelines
 
 Commit & Pull Request Guidelines
 
-- Summarize commit message conventions found in the project’s Git history.
+- Summarize commit message conventions found in the project's Git history.
 - Outline pull request requirements (descriptions, linked issues, screenshots, etc.).
 
 (Optional) Add other sections if relevant, such as Security & Configuration Tips, Architecture Overview, or Agent-Specific Instructions.

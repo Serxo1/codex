@@ -1,5 +1,6 @@
 use super::*;
 use crate::bottom_pane::slash_commands::ServiceTierCommand;
+use crate::legacy_core::DEFAULT_AGENTS_MD_FILENAME;
 use pretty_assertions::assert_eq;
 
 fn fast_tier_command() -> ServiceTierCommand {
@@ -521,8 +522,9 @@ async fn ctrl_d_with_modal_open_does_not_quit() {
 }
 
 #[tokio::test]
-async fn slash_init_skips_when_project_doc_exists() {
+async fn slash_init_updates_when_project_doc_exists() {
     let (mut chat, mut rx, mut op_rx) = make_chatwidget_manual(/*model_override*/ None).await;
+    chat.thread_id = Some(ThreadId::new());
     let tempdir = tempdir().unwrap();
     let existing_path = tempdir.path().join(DEFAULT_AGENTS_MD_FILENAME);
     std::fs::write(&existing_path, "existing instructions").unwrap();
@@ -530,21 +532,30 @@ async fn slash_init_skips_when_project_doc_exists() {
 
     submit_composer_text(&mut chat, "/init");
 
-    match op_rx.try_recv() {
-        Err(TryRecvError::Empty) => {}
-        other => panic!("expected no Codex op to be sent, got {other:?}"),
+    match next_submit_op(&mut op_rx) {
+        Op::UserTurn { items, .. } => {
+            let [UserInput::Text { text, .. }] = items.as_slice() else {
+                panic!("expected init prompt text item, got {items:?}");
+            };
+            assert!(
+                text.contains("Create or update a file named AGENTS.md"),
+                "init prompt should allow updating an existing file: {text:?}"
+            );
+            assert!(
+                text.contains("If AGENTS.md already exists, improve it in place"),
+                "init prompt should explicitly cover existing AGENTS.md files: {text:?}"
+            );
+        }
+        other => panic!("expected init user turn, got {other:?}"),
     }
 
     let cells = drain_insert_history(&mut rx);
-    assert_eq!(cells.len(), 1, "expected one info message");
-    let rendered = lines_to_single_string(&cells[0]);
     assert!(
-        rendered.contains(DEFAULT_AGENTS_MD_FILENAME),
-        "info message should mention the existing file: {rendered:?}"
-    );
-    assert!(
-        rendered.contains("Skipping /init"),
-        "info message should explain why /init was skipped: {rendered:?}"
+        cells
+            .iter()
+            .map(|cell| lines_to_single_string(cell))
+            .all(|rendered| !rendered.contains("Skipping /init")),
+        "init should no longer skip when {DEFAULT_AGENTS_MD_FILENAME} exists"
     );
     assert_eq!(
         std::fs::read_to_string(existing_path).unwrap(),
